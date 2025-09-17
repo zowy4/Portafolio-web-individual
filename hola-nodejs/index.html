@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portafolio 3D - Zoé Andrés</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Three.js para efectos 3D -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.4/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.4/dist/ScrollTrigger.min.js"></script>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'sans': ['Poppins', 'sans-serif'],
+          },
+          colors: {
+            'primary': '#D4AF37', // Dorado elegante
+            'dark': '#121212',    // Negro profundo
+            'light': '#F5F5F5',   // Blanco elegante
+            'muted': '#9E9E9E',   // Gris plateado
+            'accent': '#212121'   // Gris oscuro
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      overflow-x: hidden;
+      background-color: #121212;
+    }
+    
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: -1;
+    }
+    
+    .content-wrapper {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 1s ease-out, transform 1s ease-out;
+    }
+    
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .card-container {
+      perspective: 1500px;
+      margin-bottom: 2rem;
+      cursor: pointer;
+    }
+    
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 250px;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform-style: preserve-3d;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .card-inner:hover {
+      transform: rotateY(15deg) rotateX(8deg) scale(1.08) translateZ(20px);
+      box-shadow: 0 25px 50px rgba(212, 175, 55, 0.4), 0 0 30px rgba(212, 175, 55, 0.2);
+    }
+    
+    .section-title {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background-color: #D4AF37;
+      transition: width 0.6s ease;
+    }
+    
+    .section-title.visible::after {
+      width: 100%;
+    }
+    
+    .parallax-element {
+      transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    
+    .floating {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0% { transform: translateY(0px) rotate(0deg); }
+      25% { transform: translateY(-10px) rotate(1deg); }
+      50% { transform: translateY(-20px) rotate(0deg); }
+      75% { transform: translateY(-10px) rotate(-1deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+    
+    .pulse-glow {
+      animation: pulseGlow 3s ease-in-out infinite;
+    }
+    
+    @keyframes pulseGlow {
+      0%, 100% { 
+        box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        transform: scale(1);
+      }
+      50% { 
+        box-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
+        transform: scale(1.02);
+      }
+    }
+    
+    .rotate-3d {
+      animation: rotate3d 20s linear infinite;
+    }
+    
+    @keyframes rotate3d {
+      0% { transform: rotateY(0deg) rotateX(0deg); }
+      25% { transform: rotateY(90deg) rotateX(5deg); }
+      50% { transform: rotateY(180deg) rotateX(0deg); }
+      75% { transform: rotateY(270deg) rotateX(-5deg); }
+      100% { transform: rotateY(360deg) rotateX(0deg); }
+    }
+    
+    .slide-in-left {
+      animation: slideInLeft 1s ease-out;
+    }
+    
+    @keyframes slideInLeft {
+      0% { 
+        transform: translateX(-100px) rotateY(-15deg);
+        opacity: 0;
+      }
+      100% { 
+        transform: translateX(0) rotateY(0deg);
+        opacity: 1;
+      }
+    }
+    
+    .slide-in-right {
+      animation: slideInRight 1s ease-out;
+    }
+    
+    @keyframes slideInRight {
+      0% { 
+        transform: translateX(100px) rotateY(15deg);
+        opacity: 0;
+      }
+      100% { 
+        transform: translateX(0) rotateY(0deg);
+        opacity: 1;
+      }
+    }
+    
+    .bounce-in {
+      animation: bounceIn 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    @keyframes bounceIn {
+      0% { 
+        transform: scale(0.3) rotate(-10deg);
+        opacity: 0;
+      }
+      50% { 
+        transform: scale(1.1) rotate(5deg);
+        opacity: 0.8;
+      }
+      100% { 
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 1.5rem;
+      border-radius: 0.75rem; /* rounded-xl */
+      background-color: #1e293b; /* bg-slate-800 */
+      border: 1px solid #334155; /* border-slate-700 */
+    }
+    .card-back {
+      transform: rotateY(180deg);
+      align-items: center;
+    }
+    
+    /* Estilos para las tarjetas de tecnología */
+    .tech-card {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border: 1px solid #475569;
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .tech-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+      transition: left 0.6s;
+    }
+    
+    .tech-card:hover::before {
+      left: 100%;
+    }
+    
+    .tech-card:hover {
+      transform: translateY(-8px) scale(1.05);
+      border-color: #D4AF37;
+      box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
+    }
+    
+    .tech-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      transition: transform 0.3s ease;
+    }
+    
+    .tech-card:hover .tech-icon {
+      transform: scale(1.2) rotate(5deg);
+    }
+    
+    .tech-name {
+      font-weight: 600;
+      color: #F5F5F5;
+      font-size: 1rem;
+      transition: color 0.3s ease;
+    }
+    
+    .tech-card:hover .tech-name {
+      color: #D4AF37;
+    }
+  </style>
+</head>
+
+<body class="bg-dark text-light font-sans">
+  <!-- Contenedor para el fondo 3D -->
+  <div id="canvas-container"></div>
+
+  <div class="content-wrapper">
+    <header class="bg-dark/60 backdrop-blur-md p-4 fixed top-0 left-0 right-0 z-50">
+      <div class="container mx-auto flex justify-between items-center">
+        <a href="#hero" class="text-2xl font-bold text-primary floating">Zoé Andrés</a>
+        <nav class="hidden md:flex space-x-6 text-base font-medium">
+          <a href="#perfil" class="hover:text-primary transition-colors duration-300 hover:scale-110 transform transition-transform">Perfil</a>
+          <a href="#proyectos" class="hover:text-primary transition-colors duration-300 hover:scale-110 transform transition-transform">Proyectos</a>
+          <a href="#tecnologias" class="hover:text-primary transition-colors duration-300 hover:scale-110 transform transition-transform">Tecnologías</a>
+          <a href="#contacto" class="hover:text-primary transition-colors duration-300 hover:scale-110 transform transition-transform">Contacto</a>
+        </nav>
+      </div>
+    </header>
+
+  <section id="hero" class="h-screen flex items-center justify-center text-center px-4">
+    <div class="reveal">
+        <h1 class="text-5xl md:text-7xl font-bold mb-4 floating pulse-glow">Zoé Andrés</h1>
+        <p class="text-xl md:text-2xl text-muted parallax-element bounce-in">Desarrollo Web, Bases de Datos y Microcontroladores</p>
+        <div class="mt-8">
+          <a href="#proyectos" class="bg-primary text-dark font-bold py-3 px-6 rounded-lg hover:bg-primary/80 transition-all transform hover:scale-105 inline-block pulse-glow">Ver Proyectos</a>
+        </div>
+    </div>
+  </section>
+
+  <section id="perfil" class="py-20 px-6 container mx-auto">
+    <div class="reveal max-w-6xl mx-auto">
+      <h2 class="text-5xl font-bold mb-12 text-center section-title">Sobre mí</h2>
+      
+      <div class="grid lg:grid-cols-3 gap-8 mb-12">
+        <!-- Información Principal -->
+        <div class="lg:col-span-2">
+          <div class="bg-gradient-to-br from-accent to-accent/80 border border-gray-800 p-8 rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-500">
+            <h3 class="text-3xl font-bold mb-6 text-primary">Zoé Andrés</h3>
+            <p class="text-muted text-lg leading-relaxed mb-6">
+              Estudiante de <span class="text-primary font-semibold">Ingeniería en Sistemas Computacionales</span>, 22 años, 
+              actualmente cursando el <span class="text-primary font-semibold">7º semestre</span>. 
+              Técnico en Ofimática con certificación en Microsoft Office. 
+              Busco oportunidades de trabajo de medio tiempo por las tardes o fines de semana.
+            </p>
+            <p class="text-muted text-lg leading-relaxed">
+              Apasionado por el desarrollo web, bases de datos y microcontroladores. 
+              Me gusta el básquetbol y salir a caminar con mi perro. 
+              Disfruto trabajando en equipo y resolviendo problemas técnicos complejos.
+            </p>
+          </div>
+        </div>
+
+        <!-- Información Personal -->
+        <div class="space-y-6">
+          <div class="bg-accent border border-gray-800 p-6 rounded-xl transform hover:scale-105 transition-all duration-300">
+            <h4 class="text-xl font-bold mb-4 text-primary">Información Personal</h4>
+            <div class="space-y-3 text-muted">
+              <p><span class="font-semibold">Edad:</span> 22 años</p>
+              <p><span class="font-semibold">Idiomas:</span> Español (nativo), Inglés (B2)</p>
+              <p><span class="font-semibold">Ubicación:</span> Morelia, Michoacán</p>
+              <p><span class="font-semibold">Disponibilidad:</span> Medio tiempo</p>
+            </div>
+          </div>
+
+          <div class="bg-accent border border-gray-800 p-6 rounded-xl transform hover:scale-105 transition-all duration-300">
+            <h4 class="text-xl font-bold mb-4 text-primary">Habilidades Blandas</h4>
+            <div class="space-y-2 text-muted">
+              <p>• Trabajo en equipo</p>
+              <p>• Resolución de problemas</p>
+              <p>• Comunicación oral y escrita</p>
+              <p>• Gestión del tiempo</p>
+              <p>• Adaptabilidad</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Experiencia y Educación -->
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="bg-gradient-to-br from-accent to-accent/80 border border-gray-800 p-8 rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-500">
+          <h3 class="text-3xl font-bold mb-6 text-primary">Experiencia Laboral</h3>
+          <div class="space-y-6">
+            <div class="border-l-4 border-primary pl-4">
+              <h4 class="text-xl font-semibold text-light mb-2">Encargado de Atención a Clientes</h4>
+              <p class="text-primary font-medium">Inflables, Parque 150 Morelia</p>
+              <p class="text-muted text-sm">Trabajo ocasional desde 2022</p>
+            </div>
+            <div class="border-l-4 border-primary pl-4">
+              <h4 class="text-xl font-semibold text-light mb-2">Auxiliar Administrativo</h4>
+              <p class="text-primary font-medium">RAINSA Morelia</p>
+              <p class="text-muted text-sm">Mayo - Agosto 2022</p>
+            </div>
+            <div class="border-l-4 border-primary pl-4">
+              <h4 class="text-xl font-semibold text-light mb-2">Auxiliar de Instalaciones</h4>
+              <p class="text-primary font-medium">Convergencia Tecnológica</p>
+              <p class="text-muted text-sm">Experiencia en instalaciones tecnológicas</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-accent to-accent/80 border border-gray-800 p-8 rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-500">
+          <h3 class="text-3xl font-bold mb-6 text-primary">Educación</h3>
+          <div class="space-y-6">
+            <div class="border-l-4 border-primary pl-4">
+              <h4 class="text-xl font-semibold text-light mb-2">Ingeniería en Sistemas Computacionales</h4>
+              <p class="text-primary font-medium">Instituto Tecnológico de Morelia</p>
+              <p class="text-muted text-sm">Septiembre 2022 - Presente (7º semestre)</p>
+            </div>
+            <div class="border-l-4 border-primary pl-4">
+              <h4 class="text-xl font-semibold text-light mb-2">Técnico en Ofimática</h4>
+              <p class="text-primary font-medium">Centro Bachillerato Tecnológico Agropecuario</p>
+              <p class="text-muted text-sm">2018 - 2021</p>
+            </div>
+          </div>
+          </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="proyectos" class="py-20 px-6 bg-accent/50">
+    <div class="container mx-auto">
+      <h2 class="text-5xl font-bold mb-16 text-center reveal section-title">Proyectos</h2>
+      
+      <!-- Proyectos Académicos -->
+      <div class="mb-16">
+        <h3 class="text-3xl font-bold mb-8 text-center text-primary">Proyectos Académicos</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        
+        <div class="card-container reveal">
+          <div class="card-inner">
+            <div class="card-front">
+                <div class="flex items-center mb-4">
+                  <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-primary text-2xl">⚽</span>
+                  </div>
+                  <h3 class="text-2xl font-semibold text-primary">Sistema de Quinielas de Fútbol</h3>
+                </div>
+                <p class="text-muted mb-4">Java con Swing y archivos serializados. Gestión completa de usuarios, predicciones, rondas y enfrentamientos.</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Java</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Swing</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Serialización</span>
+                </div>
+            </div>
+            <div class="card-back">
+                <div class="text-center">
+                  <h4 class="text-xl font-bold mb-4 text-primary">Características</h4>
+                  <ul class="text-muted text-sm space-y-2 mb-6">
+                    <li>• Gestión de usuarios</li>
+                    <li>• Sistema de predicciones</li>
+                    <li>• Control de rondas</li>
+                    <li>• Persistencia de datos</li>
+                  </ul>
+                  <a href="#" class="bg-primary text-dark font-bold py-2 px-4 rounded-lg hover:bg-primary/80 transition">Ver Código</a>
+                </div>
+              </div>
+          </div>
+        </div>
+
+        <div class="card-container reveal" style="transition-delay: 100ms;">
+          <div class="card-inner">
+            <div class="card-front">
+                <div class="flex items-center mb-4">
+                  <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-primary text-2xl">🗄️</span>
+                  </div>
+                  <h3 class="text-2xl font-semibold text-primary">Base de Datos Liga MX</h3>
+                </div>
+                <p class="text-muted mb-4">MySQL y Oracle 12c/21c. Implementación de seguridad, roles, auditoría y gestión de estadísticas de jugadores.</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">MySQL</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Oracle</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">SQL</span>
+                </div>
+            </div>
+            <div class="card-back">
+                <div class="text-center">
+                  <h4 class="text-xl font-bold mb-4 text-primary">Características</h4>
+                  <ul class="text-muted text-sm space-y-2 mb-6">
+                    <li>• Seguridad avanzada</li>
+                    <li>• Gestión de roles</li>
+                    <li>• Sistema de auditoría</li>
+                    <li>• Data Pump</li>
+                  </ul>
+                  <a href="#" class="bg-primary text-dark font-bold py-2 px-4 rounded-lg hover:bg-primary/80 transition">Ver Diseño</a>
+                </div>
+              </div>
+          </div>
+        </div>
+
+        <div class="card-container reveal" style="transition-delay: 200ms;">
+          <div class="card-inner">
+            <div class="card-front">
+                <div class="flex items-center mb-4">
+                  <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-primary text-2xl">🔧</span>
+                  </div>
+                  <h3 class="text-2xl font-semibold text-primary">Sistema Arduino - Llenado de Tinaco</h3>
+                </div>
+                <p class="text-muted mb-4">Sensor ultrasónico, bomba de agua, LEDs y pantalla LCD. Sistema automático con visualización en tiempo real.</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Arduino</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">C++</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Sensores</span>
+                </div>
+            </div>
+            <div class="card-back">
+                <div class="text-center">
+                  <h4 class="text-xl font-bold mb-4 text-primary">Características</h4>
+                  <ul class="text-muted text-sm space-y-2 mb-6">
+                    <li>• Control automático</li>
+                    <li>• Sensor ultrasónico</li>
+                    <li>• Display LCD</li>
+                    <li>• Control de LEDs</li>
+                  </ul>
+                  <a href="#" class="bg-primary text-dark font-bold py-2 px-4 rounded-lg hover:bg-primary/80 transition">Ver Demo</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proyectos de Desarrollo Web -->
+      <div class="mb-16">
+        <h3 class="text-3xl font-bold mb-8 text-center text-primary">Desarrollo Web</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        
+        <div class="card-container reveal" style="transition-delay: 300ms;">
+            <div class="card-inner">
+              <div class="card-front">
+                <div class="flex items-center mb-4">
+                  <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-primary text-2xl">👟</span>
+                  </div>
+                  <h3 class="text-2xl font-semibold text-primary">E-commerce de Tenis</h3>
+                </div>
+                <p class="text-muted mb-4">Front-end completo con HTML, CSS, JavaScript y TailwindCSS. Diseño responsivo y validaciones de formulario.</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">HTML5</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">CSS3</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">JavaScript</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">TailwindCSS</span>
+                </div>
+              </div>
+              <div class="card-back">
+                <div class="text-center">
+                  <h4 class="text-xl font-bold mb-4 text-primary">Características</h4>
+                  <ul class="text-muted text-sm space-y-2 mb-6">
+                    <li>• Diseño responsivo</li>
+                    <li>• Validaciones de formulario</li>
+                    <li>• Carrito de compras</li>
+                    <li>• Animaciones CSS</li>
+                  </ul>
+                  <a href="#" class="bg-primary text-dark font-bold py-2 px-4 rounded-lg hover:bg-primary/80 transition">Visitar Sitio</a>
+                </div>
+              </div>
+            </div>
+        </div>
+        
+        <div class="card-container reveal" style="transition-delay: 400ms;">
+            <div class="card-inner">
+              <div class="card-front">
+                <div class="flex items-center mb-4">
+                  <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-primary text-2xl">💼</span>
+                  </div>
+                  <h3 class="text-2xl font-semibold text-primary">Portafolio Web 3D</h3>
+                </div>
+                <p class="text-muted mb-4">Portafolio personal con efectos 3D, animaciones avanzadas y diseño moderno usando TailwindCSS y Three.js.</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">HTML5</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">TailwindCSS</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Three.js</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">GSAP</span>
+                </div>
+              </div>
+              <div class="card-back">
+                <div class="text-center">
+                  <h4 class="text-xl font-bold mb-4 text-primary">Características</h4>
+                  <ul class="text-muted text-sm space-y-2 mb-6">
+                    <li>• Efectos 3D interactivos</li>
+                    <li>• Animaciones fluidas</li>
+                    <li>• Diseño responsivo</li>
+                    <li>• Parallax scrolling</li>
+                  </ul>
+                  <a href="#" class="bg-primary text-dark font-bold py-2 px-4 rounded-lg hover:bg-primary/80 transition">Ver Proyecto</a>
+                </div>
+              </div>
+            </div>
+        </div>
+
+          <div class="card-container reveal" style="transition-delay: 500ms;">
+            <div class="card-inner">
+              <div class="card-front">
+                <div class="flex items-center mb-4">
+                  <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-primary text-2xl">🎮</span>
+                  </div>
+                  <h3 class="text-2xl font-semibold text-primary">Juego de Memoria Interactivo</h3>
+                </div>
+                <p class="text-muted mb-4">Juego web de memoria con JavaScript vanilla, efectos visuales y sistema de puntuación.</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">JavaScript</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">CSS3</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">HTML5</span>
+                </div>
+              </div>
+              <div class="card-back">
+                <div class="text-center">
+                  <h4 class="text-xl font-bold mb-4 text-primary">Características</h4>
+                  <ul class="text-muted text-sm space-y-2 mb-6">
+                    <li>• Sistema de puntuación</li>
+                    <li>• Efectos visuales</li>
+                    <li>• Diferentes niveles</li>
+                    <li>• Responsive design</li>
+                  </ul>
+                  <a href="#" class="bg-primary text-dark font-bold py-2 px-4 rounded-lg hover:bg-primary/80 transition">Jugar Ahora</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proyectos de Programación de Bajo Nivel -->
+      <div>
+        <h3 class="text-3xl font-bold mb-8 text-center text-primary">Programación de Bajo Nivel</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          <div class="card-container reveal" style="transition-delay: 600ms;">
+            <div class="card-inner">
+              <div class="card-front">
+                <div class="flex items-center mb-4">
+                  <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-primary text-2xl">⚙️</span>
+                  </div>
+                  <h3 class="text-2xl font-semibold text-primary">Gestión de Usuarios en Ensamblador</h3>
+                </div>
+                <p class="text-muted mb-4">Programa en emu8086 para agregar, eliminar y consultar usuarios sin duplicados. Manejo de memoria y registros.</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Ensamblador</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">emu8086</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">x86</span>
+                </div>
+              </div>
+              <div class="card-back">
+                <div class="text-center">
+                  <h4 class="text-xl font-bold mb-4 text-primary">Características</h4>
+                  <ul class="text-muted text-sm space-y-2 mb-6">
+                    <li>• CRUD de usuarios</li>
+                    <li>• Validación de duplicados</li>
+                    <li>• Manejo de memoria</li>
+                    <li>• Interfaz de consola</li>
+                  </ul>
+                  <a href="#" class="bg-primary text-dark font-bold py-2 px-4 rounded-lg hover:bg-primary/80 transition">Ver Código</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-container reveal" style="transition-delay: 700ms;">
+            <div class="card-inner">
+              <div class="card-front">
+                <div class="flex items-center mb-4">
+                  <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mr-4">
+                    <span class="text-primary text-2xl">💻</span>
+                  </div>
+                  <h3 class="text-2xl font-semibold text-primary">Sistema de Archivos en C</h3>
+                </div>
+                <p class="text-muted mb-4">Implementación de un sistema de archivos básico en ANSI C con operaciones de lectura, escritura y gestión de directorios.</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">ANSI C</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Sistemas</span>
+                  <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Archivos</span>
+                </div>
+              </div>
+              <div class="card-back">
+                <div class="text-center">
+                  <h4 class="text-xl font-bold mb-4 text-primary">Características</h4>
+                  <ul class="text-muted text-sm space-y-2 mb-6">
+                    <li>• Operaciones CRUD</li>
+                    <li>• Gestión de directorios</li>
+                    <li>• Manejo de memoria</li>
+                    <li>• Interfaz de línea de comandos</li>
+                  </ul>
+                  <a href="#" class="bg-primary text-dark font-bold py-2 px-4 rounded-lg hover:bg-primary/80 transition">Ver Código</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tecnologias" class="py-20 px-6 container mx-auto">
+    <div class="reveal">
+      <h2 class="text-5xl font-bold mb-16 text-center section-title">Tecnologías y Competencias</h2>
+      
+      <!-- Lenguajes de Programación -->
+      <div class="mb-16">
+        <h3 class="text-3xl font-bold mb-8 text-center text-primary">Lenguajes de Programación</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+          <div class="tech-card group">
+            <div class="tech-icon">💻</div>
+            <span class="tech-name">ANSI C</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">⚙️</div>
+            <span class="tech-name">Ensamblador</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">🌐</div>
+            <span class="tech-name">HTML5</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">🎨</div>
+            <span class="tech-name">CSS3</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">⚡</div>
+            <span class="tech-name">JavaScript</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">☕</div>
+            <span class="tech-name">Java</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bases de Datos -->
+      <div class="mb-16">
+        <h3 class="text-3xl font-bold mb-8 text-center text-primary">Bases de Datos</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+          <div class="tech-card group">
+            <div class="tech-icon">🐬</div>
+            <span class="tech-name">MySQL</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">🏛️</div>
+            <span class="tech-name">Oracle 12c/21c</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">📊</div>
+            <span class="tech-name">SQL</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desarrollo Web -->
+      <div class="mb-16">
+        <h3 class="text-3xl font-bold mb-8 text-center text-primary">Desarrollo Web</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div class="tech-card group">
+            <div class="tech-icon">🌐</div>
+            <span class="tech-name">Front-end</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">📱</div>
+            <span class="tech-name">Diseño Responsivo</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">🎨</div>
+            <span class="tech-name">TailwindCSS</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">🎭</div>
+            <span class="tech-name">Three.js</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Microcontroladores -->
+      <div class="mb-16">
+        <h3 class="text-3xl font-bold mb-8 text-center text-primary">Microcontroladores</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div class="tech-card group">
+            <div class="tech-icon">🔧</div>
+            <span class="tech-name">Arduino</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">💾</div>
+            <span class="tech-name">ATmega328P</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">📡</div>
+            <span class="tech-name">Sensores Ultrasónicos</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">📺</div>
+            <span class="tech-name">Displays LCD</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Administración de Sistemas -->
+      <div class="mb-16">
+        <h3 class="text-3xl font-bold mb-8 text-center text-primary">Administración de Sistemas</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+          <div class="tech-card group">
+            <div class="tech-icon">🐧</div>
+            <span class="tech-name">Ubuntu Server</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">🪟</div>
+            <span class="tech-name">Windows Server</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">🔒</div>
+            <span class="tech-name">Auditoría y Seguridad</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Herramientas y Control de Versiones -->
+      <div class="mb-16">
+        <h3 class="text-3xl font-bold mb-8 text-center text-primary">Herramientas</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div class="tech-card group">
+            <div class="tech-icon">📦</div>
+            <span class="tech-name">Git</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">📄</div>
+            <span class="tech-name">Microsoft Office</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">☁️</div>
+            <span class="tech-name">Google Workspace</span>
+          </div>
+          <div class="tech-card group">
+            <div class="tech-icon">🔄</div>
+            <span class="tech-name">Data Pump</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Certificaciones -->
+      <div class="bg-gradient-to-br from-accent to-accent/80 border border-gray-800 p-8 rounded-2xl shadow-2xl">
+        <h3 class="text-3xl font-bold mb-8 text-center text-primary">Certificaciones</h3>
+        <div class="grid md:grid-cols-2 gap-8">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-primary text-2xl">🏆</span>
+            </div>
+            <h4 class="text-xl font-semibold text-light mb-2">Microsoft Office</h4>
+            <p class="text-muted">Certificado en Competencia Laboral en el Estándar de Competencia Tecnológica Microsoft para la productividad</p>
+            <div class="mt-4 flex justify-center space-x-2">
+              <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">MS Excel</span>
+              <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">MS PowerPoint</span>
+              <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">MS Word</span>
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-primary text-2xl">🎓</span>
+            </div>
+            <h4 class="text-xl font-semibold text-light mb-2">Técnico en Ofimática</h4>
+            <p class="text-muted">Centro Bachillerato Tecnológico Agropecuario (2018-2021)</p>
+            <div class="mt-4 flex justify-center space-x-2">
+              <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Ofimática</span>
+              <span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">Productividad</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contacto" class="py-20 px-6 bg-gradient-to-br from-dark/80 to-accent/30">
+    <div class="container mx-auto max-w-4xl">
+      <div class="text-center mb-16 reveal">
+        <h2 class="text-5xl font-bold mb-6 section-title">Contacto</h2>
+        <p class="text-xl text-muted">¿Tienes alguna pregunta o propuesta? No dudes en escribirme.</p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-12">
+        <!-- Información de contacto -->
+        <div class="reveal slide-in-left">
+          <h3 class="text-3xl font-bold mb-8 text-primary">Información de Contacto</h3>
+          <div class="space-y-6">
+            <div class="flex items-center space-x-4 p-4 bg-accent/50 rounded-xl hover:bg-accent/70 transition-all duration-300">
+              <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                <span class="text-primary text-xl">📧</span>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-light">Email</h4>
+                <p class="text-muted">zoé.andrés@email.com</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center space-x-4 p-4 bg-accent/50 rounded-xl hover:bg-accent/70 transition-all duration-300">
+              <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                <span class="text-primary text-xl">📍</span>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-light">Ubicación</h4>
+                <p class="text-muted">Morelia, Michoacán, México</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center space-x-4 p-4 bg-accent/50 rounded-xl hover:bg-accent/70 transition-all duration-300">
+              <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                <span class="text-primary text-xl">💼</span>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-light">Disponibilidad</h4>
+                <p class="text-muted">Medio tiempo - Tardes y fines de semana</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center space-x-4 p-4 bg-accent/50 rounded-xl hover:bg-accent/70 transition-all duration-300">
+              <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                <span class="text-primary text-xl">🎓</span>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-light">Estudios</h4>
+                <p class="text-muted">7º semestre - Ingeniería en Sistemas</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Formulario de contacto -->
+        <div class="reveal slide-in-right">
+          <form class="space-y-6">
+            <div>
+              <label class="block text-light mb-2 font-semibold" for="nombre">Nombre</label>
+              <input class="w-full bg-accent/50 border border-gray-600 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 text-light placeholder-gray-400" type="text" id="nombre" placeholder="Tu nombre completo">
+            </div>
+            <div>
+              <label class="block text-light mb-2 font-semibold" for="email">Email</label>
+              <input class="w-full bg-accent/50 border border-gray-600 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 text-light placeholder-gray-400" type="email" id="email" placeholder="tu@email.com">
+            </div>
+            <div>
+              <label class="block text-light mb-2 font-semibold" for="asunto">Asunto</label>
+              <input class="w-full bg-accent/50 border border-gray-600 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 text-light placeholder-gray-400" type="text" id="asunto" placeholder="¿En qué puedo ayudarte?">
+            </div>
+            <div>
+              <label class="block text-light mb-2 font-semibold" for="mensaje">Mensaje</label>
+              <textarea class="w-full bg-accent/50 border border-gray-600 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 text-light placeholder-gray-400 resize-none" id="mensaje" rows="5" placeholder="Escribe tu mensaje aquí..."></textarea>
+            </div>
+            <button class="w-full bg-gradient-to-r from-primary to-primary/80 text-dark font-bold px-8 py-4 rounded-xl hover:from-primary/90 hover:to-primary/70 transition-all duration-300 transform hover:scale-105 pulse-glow" type="submit">
+              Enviar Mensaje
+            </button>
+          </form>
+        </div>
+        </div>
+    </div>
+  </section>
+
+  <footer class="text-center p-6 text-muted border-t border-slate-700">
+    © 2025 Zoé Andrés - Todos los derechos reservados.
+  </footer>
+
+  <!-- Script personalizado para interacciones -->
+  <script src="index.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, {
+        threshold: 0.1
+      });
+
+      const elementsToReveal = document.querySelectorAll('.reveal');
+      elementsToReveal.forEach(el => observer.observe(el));
+    });
+  </script>
+
+  <!-- Scripts para animaciones y efectos 3D -->
+  <script>
+    // Inicialización de Three.js para el fondo animado
+    let scene, camera, renderer, particles;
+    
+    function initThreeJS() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 20;
+      
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      document.getElementById('canvas-container').appendChild(renderer.domElement);
+      
+      // Crear partículas para el fondo
+      const particlesGeometry = new THREE.BufferGeometry();
+      const particlesCount = 2000;
+      const posArray = new Float32Array(particlesCount * 3);
+      const colorArray = new Float32Array(particlesCount * 3);
+      
+      for (let i = 0; i < particlesCount * 3; i += 3) {
+        posArray[i] = (Math.random() - 0.5) * 100;
+        posArray[i + 1] = (Math.random() - 0.5) * 100;
+        posArray[i + 2] = (Math.random() - 0.5) * 100;
+        
+        // Colores variados
+        const color = new THREE.Color();
+        color.setHSL(0.15 + Math.random() * 0.1, 0.7, 0.5 + Math.random() * 0.3);
+        colorArray[i] = color.r;
+        colorArray[i + 1] = color.g;
+        colorArray[i + 2] = color.b;
+      }
+      
+      particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+      particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+      
+      const particlesMaterial = new THREE.PointsMaterial({
+        size: 0.15,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending
+      });
+      
+      particles = new THREE.Points(particlesGeometry, particlesMaterial);
+      scene.add(particles);
+      
+      // Crear geometría adicional para efectos
+      const wireframeGeometry = new THREE.SphereGeometry(30, 16, 16);
+      const wireframeMaterial = new THREE.MeshBasicMaterial({
+        color: 0xD4AF37,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.1
+      });
+      const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
+      scene.add(wireframe);
+      
+      window.addEventListener('resize', onWindowResize);
+      
+      animate();
+    }
+    
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      particles.rotation.x += 0.0005;
+      particles.rotation.y += 0.0005;
+      
+      // Rotar el wireframe
+      if (scene.children[1]) {
+        scene.children[1].rotation.x += 0.001;
+        scene.children[1].rotation.y += 0.002;
+      }
+      
+      renderer.render(scene, camera);
+    }
+    
+    // Inicializar Three.js cuando se carga la página
+    window.addEventListener('load', initThreeJS);
+    
+    // Animaciones de scroll y parallax con GSAP
+     document.addEventListener('DOMContentLoaded', function() {
+       // Inicializar GSAP ScrollTrigger
+       gsap.registerPlugin(ScrollTrigger);
+       
+       // Animaciones de transición entre secciones
+       const sections = document.querySelectorAll('section');
+       sections.forEach(section => {
+         gsap.fromTo(section, 
+           { opacity: 0, y: 50 },
+           { 
+             opacity: 1, 
+             y: 0, 
+             duration: 1,
+             scrollTrigger: {
+               trigger: section,
+               start: "top 80%",
+               end: "bottom 20%",
+               toggleActions: "play none none reverse"
+             }
+           }
+         );
+       });
+       
+       // Animación de elementos al hacer scroll
+       const revealElements = document.querySelectorAll('.reveal');
+       const sectionTitles = document.querySelectorAll('.section-title');
+       
+       function checkReveal() {
+         const triggerBottom = window.innerHeight * 0.8;
+         
+         revealElements.forEach(element => {
+           const elementTop = element.getBoundingClientRect().top;
+           if (elementTop < triggerBottom) {
+             element.classList.add('visible');
+           }
+         });
+         
+         sectionTitles.forEach(title => {
+           const titleTop = title.getBoundingClientRect().top;
+           if (titleTop < triggerBottom) {
+             title.classList.add('visible');
+           }
+         });
+       }
+      
+      // Efecto parallax al mover el mouse
+      const parallaxElements = document.querySelectorAll('.parallax-element');
+      
+      document.addEventListener('mousemove', function(e) {
+        const mouseX = e.clientX / window.innerWidth - 0.5;
+        const mouseY = e.clientY / window.innerHeight - 0.5;
+        
+        parallaxElements.forEach(element => {
+          const depth = 20;
+          const moveX = mouseX * depth;
+          const moveY = mouseY * depth;
+          element.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        });
+      });
+      
+      window.addEventListener('scroll', checkReveal);
+      checkReveal(); // Verificar elementos visibles al cargar la página
+    });
+  </script>
+</body>
+</html>
